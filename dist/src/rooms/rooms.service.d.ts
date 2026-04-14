@@ -7,14 +7,14 @@ export declare class RoomsService {
     constructor(prisma: PrismaService, redis: RedisService);
     create(userId: string, dto: CreateRoomDto): Promise<{
         owner: {
-            username: string;
             id: string;
+            username: string;
         };
     } & {
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        name: string;
         description: string | null;
         topic: string | null;
         isPrivate: boolean;
@@ -27,14 +27,14 @@ export declare class RoomsService {
             decisions: number;
         };
         owner: {
-            username: string;
             id: string;
+            username: string;
         };
     } & {
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        name: string;
         description: string | null;
         topic: string | null;
         isPrivate: boolean;
@@ -46,13 +46,13 @@ export declare class RoomsService {
             decisions: number;
         };
         owner: {
-            username: string;
             id: string;
+            username: string;
         };
         members: ({
             user: {
-                username: string;
                 id: string;
+                username: string;
                 role: import("@prisma/client").$Enums.UserRole;
             };
         } & {
@@ -62,10 +62,10 @@ export declare class RoomsService {
             roomId: string;
         })[];
     } & {
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        name: string;
         description: string | null;
         topic: string | null;
         isPrivate: boolean;

@@ -26,17 +26,17 @@ export declare class VotingService {
     }>;
     getVotes(decisionId: string): Promise<({
         user: {
-            username: string;
             id: string;
+            username: string;
             role: import("@prisma/client").$Enums.UserRole;
         };
     } & {
         id: string;
         createdAt: Date;
         userId: string;
-        weight: number;
-        validation: import("@prisma/client").$Enums.VoteValidationStatus;
         decisionId: string;
         optionId: string;
+        weight: number;
+        validation: import("@prisma/client").$Enums.VoteValidationStatus;
     })[]>;
 }
