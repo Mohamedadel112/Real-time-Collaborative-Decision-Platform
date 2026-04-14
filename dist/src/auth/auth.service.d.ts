@@ -28,9 +28,9 @@ export declare class AuthService {
     }>;
     private buildTokenResponse;
     validateUser(payload: any): Promise<{
-        id: string;
         email: string;
         username: string;
+        id: string;
         passwordHash: string;
         role: import("@prisma/client").$Enums.UserRole;
         isEmailVerified: boolean;

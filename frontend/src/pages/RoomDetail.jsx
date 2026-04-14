@@ -19,7 +19,7 @@ function CreateDecisionModal({ roomId, onClose, onCreate }) {
     domain: '',
     options: [{ label: '', description: '' }, { label: '', description: '' }],
   });
-  const { isLoading } = useDecisionStore();
+  const { isLoading, error } = useDecisionStore();
 
   const addOption = () => setForm((f) => ({ ...f, options: [...f.options, { label: '', description: '' }] }));
   const removeOption = (i) => setForm((f) => ({ ...f, options: f.options.filter((_, idx) => idx !== i) }));
@@ -29,7 +29,12 @@ function CreateDecisionModal({ roomId, onClose, onCreate }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await onCreate({ ...form, roomId });
+      const payload = {
+        ...form,
+        options: form.options.map((o) => o.label).filter((l) => l.trim() !== ''),
+        roomId,
+      };
+      await onCreate(payload);
       onClose();
     } catch (_) {}
   };
@@ -41,6 +46,11 @@ function CreateDecisionModal({ roomId, onClose, onCreate }) {
           <h3 className="font-display text-lg font-bold text-[#0F172A]">New Decision Proposal</h3>
           <button onClick={onClose} className="text-[#76777d] hover:text-[#0F172A]"><X className="w-5 h-5" /></button>
         </div>
+        {error && (
+          <div className="bg-red-50 text-red-600 px-4 py-2 text-sm rounded-lg border border-red-100">
+            {Array.isArray(error) ? error[0] : error}
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="space-y-4">
           {[['title', 'Title', 'e.g. Treasury Re-allocation...'], ['description', 'Description', 'Describe the proposal...'], ['domain', 'Domain', 'e.g. Finance, Governance...']].map(([field, label, ph]) => (
             <div key={field}>

@@ -27,7 +27,17 @@ export default function Dashboard() {
 
   // Aggregate stats
   const activeRooms = rooms.filter((r) => true).slice(0, 4);
-  const totalVotes = decisions.reduce((acc, d) => acc + (d.votes?.length || 0), 0);
+  const totalVotes = user?.votesCount ?? 0;
+
+  const calculatePercentile = (rep) => {
+    if (rep >= 100) return 'top 1%';
+    if (rep >= 50) return 'top 5%';
+    if (rep >= 20) return 'top 10%';
+    if (rep >= 5) return 'top 25%';
+    if (rep > 0) return 'top 50%';
+    return 'bottom 50%';
+  };
+  const percentile = calculatePercentile(user?.reputation ?? 0);
 
   const stats = [
     { label: 'Reputation Score', value: user?.reputation?.toFixed(1) ?? '—', icon: TrendingUp, color: 'text-emerald-500' },
@@ -47,7 +57,7 @@ export default function Dashboard() {
               Welcome back{user?.username ? `, ${user.username}` : ''}.
             </h1>
             <p className="text-[#45464d] mt-1.5 text-sm">
-              Your voting weight is currently in the top 5% of all active participants.
+              Your voting weight is currently in the {percentile} of all active participants.
             </p>
           </div>
 
@@ -78,7 +88,7 @@ export default function Dashboard() {
             Reputation: {user?.reputation?.toFixed(2) ?? '0.00'}
           </h2>
           <p className="text-white/50 text-sm mt-1.5 max-w-lg">
-            Your voting weight is in the top 5% of all active participants within the High Court chambers.
+            Your voting weight is in the {percentile} of all active participants within the High Court chambers.
           </p>
           <div className="mt-4 flex gap-4">
             {[['Role', user?.role ?? 'GUEST'], ['Votes Cast', user?.votesCount ?? 0], ['Correct', user?.correctVotes ?? 0]].map(([k, v]) => (
@@ -138,8 +148,8 @@ export default function Dashboard() {
                     </span>
                   </div>
                   <div className="mt-3 flex gap-4 text-xs text-[#76777d]">
-                    <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {room.members?.length ?? 0} members</span>
-                    <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {room.decisions?.length ?? 0} decisions</span>
+                    <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {room._count?.members ?? 0} members</span>
+                    <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {room._count?.decisions ?? 0} decisions</span>
                   </div>
                 </Link>
               ))}
