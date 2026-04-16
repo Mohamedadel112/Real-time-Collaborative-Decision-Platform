@@ -19,9 +19,9 @@ let RateLimiterService = class RateLimiterService {
     }
     async isAllowed(identifier, maxRequests, windowSeconds) {
         const key = `rate:${identifier}`;
-        const count = await this.redis.incr(key);
+        const count = await this.redis.client.incr(key);
         if (count === 1) {
-            await this.redis.expire(key, windowSeconds);
+            await this.redis.client.expire(key, windowSeconds);
         }
         return count <= maxRequests;
     }

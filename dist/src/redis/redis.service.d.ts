@@ -1,32 +1,15 @@
-import { OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-export declare class RedisService implements OnModuleInit, OnModuleDestroy {
-    private readonly options;
-    private readonly logger;
-    private client;
-    private subscriber;
-    private publisher;
-    constructor(options: any);
-    onModuleInit(): Promise<void>;
-    onModuleDestroy(): Promise<void>;
+import { OnModuleDestroy } from '@nestjs/common';
+import Redis from 'ioredis';
+export declare class RedisService implements OnModuleDestroy {
+    private readonly redisClient;
+    private readonly redisSubscriber;
+    constructor(redisClient: Redis, redisSubscriber: Redis);
+    onModuleDestroy(): void;
+    get client(): Redis;
+    get subscriber(): Redis;
+    incrementAndGet(key: string, expirySeconds: number): Promise<number>;
+    publish(channel: string, message: any): Promise<void>;
+    subscribe(channel: string, callback: (message: any) => void): Promise<void>;
+    setWithExpiry(key: string, value: string, expirySeconds: number): Promise<void>;
     get(key: string): Promise<string | null>;
-    set(key: string, value: string, ttlSeconds?: number): Promise<void>;
-    del(key: string): Promise<void>;
-    exists(key: string): Promise<boolean>;
-    ttl(key: string): Promise<number>;
-    hset(key: string, field: string, value: string): Promise<void>;
-    hget(key: string, field: string): Promise<string | null>;
-    hgetall(key: string): Promise<Record<string, string>>;
-    hdel(key: string, field: string): Promise<void>;
-    incr(key: string): Promise<number>;
-    incrby(key: string, amount: number): Promise<number>;
-    expire(key: string, seconds: number): Promise<void>;
-    acquireLock(key: string, ttlMs: number): Promise<boolean>;
-    releaseLock(key: string): Promise<void>;
-    publish(channel: string, message: string): Promise<void>;
-    subscribe(channel: string, callback: (message: string) => void): Promise<void>;
-    sadd(key: string, ...members: string[]): Promise<void>;
-    srem(key: string, ...members: string[]): Promise<void>;
-    smembers(key: string): Promise<string[]>;
-    scard(key: string): Promise<number>;
-    sismember(key: string, member: string): Promise<boolean>;
 }

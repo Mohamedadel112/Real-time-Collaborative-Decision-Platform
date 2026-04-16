@@ -1,5 +1,11 @@
 import {
-  Body, Controller, Delete, Get, Param, Post, UseGuards,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { RoomsService } from './rooms.service';

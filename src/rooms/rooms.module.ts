@@ -10,4 +10,4 @@ import { AuthModule } from '../auth/auth.module';
   providers: [RoomsService, RoomsGateway],
   exports: [RoomsService, RoomsGateway],
 })
-export class RoomsModule { }
+export class RoomsModule {}

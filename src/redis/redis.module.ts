@@ -1,24 +1,32 @@
-import { Global, Module } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Module, Global } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import Redis from 'ioredis';
 import { RedisService } from './redis.service';
-import { RateLimiterService } from './rate-limiter.service';
 
 @Global()
 @Module({
+  imports: [ConfigModule],
   providers: [
     {
-      provide: 'REDIS_OPTIONS',
-      useFactory: (config: ConfigService) => ({
-        host: config.get('app.redis.host'),
-        port: config.get('app.redis.port'),
-        password: config.get('app.redis.password'),
-        db: config.get('app.redis.db'),
-      }),
+      provide: 'REDIS_CLIENT',
       inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        return new Redis(
+          configService.get<string>('REDIS_URL') || 'redis://localhost:6379',
+        );
+      },
+    },
+    {
+      provide: 'REDIS_SUBSCRIBER',
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        return new Redis(
+          configService.get<string>('REDIS_URL') || 'redis://localhost:6379',
+        );
+      },
     },
     RedisService,
-    RateLimiterService,
   ],
-  exports: [RedisService, RateLimiterService],
+  exports: ['REDIS_CLIENT', 'REDIS_SUBSCRIBER', RedisService],
 })
 export class RedisModule {}

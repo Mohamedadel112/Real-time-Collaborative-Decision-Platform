@@ -49,7 +49,11 @@ let RoomsService = class RoomsService {
             where: { id },
             include: {
                 owner: { select: { id: true, username: true } },
-                members: { include: { user: { select: { id: true, username: true, role: true } } } },
+                members: {
+                    include: {
+                        user: { select: { id: true, username: true, role: true } },
+                    },
+                },
                 _count: { select: { decisions: true } },
             },
         });
@@ -84,13 +88,13 @@ let RoomsService = class RoomsService {
         });
     }
     async addPresence(roomId, userId) {
-        await this.redis.sadd(`${ROOM_PRESENCE_PREFIX}${roomId}`, userId);
+        await this.redis.client.sadd(`${ROOM_PRESENCE_PREFIX}${roomId}`, userId);
     }
     async removePresence(roomId, userId) {
-        await this.redis.srem(`${ROOM_PRESENCE_PREFIX}${roomId}`, userId);
+        await this.redis.client.srem(`${ROOM_PRESENCE_PREFIX}${roomId}`, userId);
     }
     async getPresence(roomId) {
-        return this.redis.smembers(`${ROOM_PRESENCE_PREFIX}${roomId}`);
+        return this.redis.client.smembers(`${ROOM_PRESENCE_PREFIX}${roomId}`);
     }
     async isUserInRoom(roomId, userId) {
         return this.prisma.roomMember

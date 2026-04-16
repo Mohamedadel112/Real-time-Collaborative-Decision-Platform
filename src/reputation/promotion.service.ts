@@ -5,8 +5,8 @@ import { UserRole } from '@prisma/client';
 
 // Expert promotion conditions as per PRD
 const EXPERT_REPUTATION_THRESHOLD = 100;
-const EXPERT_ACCURACY_THRESHOLD   = 70;
-const EXPERT_VOTES_THRESHOLD      = 50;
+const EXPERT_ACCURACY_THRESHOLD = 70;
+const EXPERT_VOTES_THRESHOLD = 50;
 
 @Injectable()
 export class PromotionService {
@@ -24,9 +24,10 @@ export class PromotionService {
     // Skip admins
     if (user.role === UserRole.ADMIN) return;
 
-    const accuracy = user.votesCount > 0 ? (user.correctVotes / user.votesCount) * 100 : 0;
+    const accuracy =
+      user.votesCount > 0 ? (user.correctVotes / user.votesCount) * 100 : 0;
     const qualifiesForExpert =
-      user.reputation >= EXPERT_REPUTATION_THRESHOLD &&
+      user.reputationScore >= EXPERT_REPUTATION_THRESHOLD &&
       accuracy >= EXPERT_ACCURACY_THRESHOLD &&
       user.votesCount >= EXPERT_VOTES_THRESHOLD;
 

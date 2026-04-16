@@ -1,134 +1,67 @@
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit, Inject } from '@nestjs/common';
+import { Injectable, Inject, OnModuleDestroy } from '@nestjs/common';
 import Redis from 'ioredis';
 
 @Injectable()
-export class RedisService implements OnModuleInit, OnModuleDestroy {
-  private readonly logger = new Logger(RedisService.name);
-  private client: Redis;
-  private subscriber: Redis;
-  private publisher: Redis;
+export class RedisService implements OnModuleDestroy {
+  constructor(
+    @Inject('REDIS_CLIENT') private readonly redisClient: Redis,
+    @Inject('REDIS_SUBSCRIBER') private readonly redisSubscriber: Redis,
+  ) {}
 
-  constructor(@Inject('REDIS_OPTIONS') private readonly options: any) {}
-
-  async onModuleInit() {
-    this.client = new Redis(this.options);
-    this.subscriber = new Redis(this.options);
-    this.publisher = new Redis(this.options);
-
-    this.client.on('connect', () => this.logger.log('✅ Redis client connected'));
-    this.client.on('error', (err) => this.logger.error('Redis error', err));
+  onModuleDestroy() {
+    this.redisClient.disconnect();
+    this.redisSubscriber.disconnect();
   }
 
-  async onModuleDestroy() {
-    await this.client.quit();
-    await this.subscriber.quit();
-    await this.publisher.quit();
+  get client(): Redis {
+    return this.redisClient;
   }
 
-  // ─── Key-Value Operations ───────────────────────────────────────────────
-
-  async get(key: string): Promise<string | null> {
-    return this.client.get(key);
+  get subscriber(): Redis {
+    return this.redisSubscriber;
   }
 
-  async set(key: string, value: string, ttlSeconds?: number): Promise<void> {
-    if (ttlSeconds) {
-      await this.client.setex(key, ttlSeconds, value);
-    } else {
-      await this.client.set(key, value);
+  // Rate limiting (simple fixed-window counter with expiration)
+  async incrementAndGet(key: string, expirySeconds: number): Promise<number> {
+    const multi = this.redisClient.multi();
+    multi.incr(key);
+    multi.ttl(key);
+
+    const results = await multi.exec();
+    if (!results) throw new Error('Redis transaction failed');
+
+    const [incrResult, ttlResult] = results;
+    const count = incrResult[1] as number;
+    const currentTtl = ttlResult[1] as number;
+
+    // Set expiration only on the first increment
+    if (count === 1 || currentTtl < 0) {
+      await this.redisClient.expire(key, expirySeconds);
     }
+
+    return count;
   }
 
-  async del(key: string): Promise<void> {
-    await this.client.del(key);
+  // Pub/Sub
+  async publish(channel: string, message: any) {
+    await this.redisClient.publish(channel, JSON.stringify(message));
   }
 
-  async exists(key: string): Promise<boolean> {
-    const result = await this.client.exists(key);
-    return result === 1;
-  }
-
-  async ttl(key: string): Promise<number> {
-    return this.client.ttl(key);
-  }
-
-  // ─── Hash Operations ─────────────────────────────────────────────────────
-
-  async hset(key: string, field: string, value: string): Promise<void> {
-    await this.client.hset(key, field, value);
-  }
-
-  async hget(key: string, field: string): Promise<string | null> {
-    return this.client.hget(key, field);
-  }
-
-  async hgetall(key: string): Promise<Record<string, string>> {
-    return this.client.hgetall(key);
-  }
-
-  async hdel(key: string, field: string): Promise<void> {
-    await this.client.hdel(key, field);
-  }
-
-  // ─── Counter Operations ───────────────────────────────────────────────────
-
-  async incr(key: string): Promise<number> {
-    return this.client.incr(key);
-  }
-
-  async incrby(key: string, amount: number): Promise<number> {
-    return this.client.incrby(key, amount);
-  }
-
-  async expire(key: string, seconds: number): Promise<void> {
-    await this.client.expire(key, seconds);
-  }
-
-  // ─── Atomic Lock ─────────────────────────────────────────────────────────
-
-  async acquireLock(key: string, ttlMs: number): Promise<boolean> {
-    const lockKey = `lock:${key}`;
-    const result = await this.client.set(lockKey, '1', 'PX', ttlMs, 'NX');
-    return result === 'OK';
-  }
-
-  async releaseLock(key: string): Promise<void> {
-    await this.client.del(`lock:${key}`);
-  }
-
-  // ─── Pub/Sub ─────────────────────────────────────────────────────────────
-
-  async publish(channel: string, message: string): Promise<void> {
-    await this.publisher.publish(channel, message);
-  }
-
-  async subscribe(channel: string, callback: (message: string) => void): Promise<void> {
-    await this.subscriber.subscribe(channel);
-    this.subscriber.on('message', (ch, msg) => {
-      if (ch === channel) callback(msg);
+  async subscribe(channel: string, callback: (message: any) => void) {
+    await this.redisSubscriber.subscribe(channel);
+    this.redisSubscriber.on('message', (chan, msg) => {
+      if (chan === channel) {
+        callback(JSON.parse(msg));
+      }
     });
   }
 
-  // ─── Set Operations (Presence tracking) ──────────────────────────────────
-
-  async sadd(key: string, ...members: string[]): Promise<void> {
-    await this.client.sadd(key, ...members);
+  // Caching
+  async setWithExpiry(key: string, value: string, expirySeconds: number) {
+    await this.redisClient.setex(key, expirySeconds, value);
   }
 
-  async srem(key: string, ...members: string[]): Promise<void> {
-    await this.client.srem(key, ...members);
-  }
-
-  async smembers(key: string): Promise<string[]> {
-    return this.client.smembers(key);
-  }
-
-  async scard(key: string): Promise<number> {
-    return this.client.scard(key);
-  }
-
-  async sismember(key: string, member: string): Promise<boolean> {
-    const result = await this.client.sismember(key, member);
-    return result === 1;
+  async get(key: string): Promise<string | null> {
+    return this.redisClient.get(key);
   }
 }

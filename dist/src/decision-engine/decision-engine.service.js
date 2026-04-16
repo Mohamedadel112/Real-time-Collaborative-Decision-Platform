@@ -16,8 +16,8 @@ const event_emitter_1 = require("@nestjs/event-emitter");
 const decisions_repository_1 = require("../decisions/decisions.repository");
 const rooms_gateway_1 = require("../rooms/rooms.gateway");
 const client_1 = require("@prisma/client");
-const CONFIDENCE_VALID = 0.70;
-const CONFIDENCE_WEAK = 0.50;
+const CONFIDENCE_VALID = 0.7;
+const CONFIDENCE_WEAK = 0.5;
 let DecisionEngineService = DecisionEngineService_1 = class DecisionEngineService {
     decisionRepo;
     roomsGateway;

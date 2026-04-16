@@ -19,6 +19,12 @@ enum UserRole {
   ADMIN
 }
 
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+}
+
 enum DecisionStatus {
   OPEN
   CLOSED
@@ -42,14 +48,19 @@ model User {
   role             UserRole  @default(GUEST)
   isEmailVerified  Boolean   @default(false)
   isInvitedByAdmin Boolean   @default(false)
-  reputation       Float     @default(0)
+  invitedById      String?
+  reputationScore  Float     @default(0)
+  accuracyScore    Float     @default(0)
   votesCount       Int       @default(0)
   correctVotes     Int       @default(0)
-  domainExpertise  String[]  @default([])
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
   // Relations
+  invitedBy        User?               @relation("UserInvitedBy", fields: [invitedById], references: [id])
+  invitedUsers     User[]              @relation("UserInvitedBy")
+  adminInvites     Invite[]            @relation("AdminInvites")
+  skills           UserSkill[]
   ownedRooms       Room[]              @relation("RoomOwner")
   roomMemberships  RoomMember[]
   votes            Vote[]
@@ -197,4 +208,34 @@ model AuditLog {
 
   @@index([userId])
   @@index([entityType, entityId])
+}
+
+model Invite {
+  id          String       @id @default(uuid())
+  email       String
+  token       String       @unique
+  invitedById String
+  status      InviteStatus @default(PENDING)
+  expiresAt   DateTime
+  createdAt   DateTime     @default(now())
+  acceptedAt  DateTime?
+
+  invitedBy   User         @relation("AdminInvites", fields: [invitedById], references: [id])
+
+  @@index([token])
+  @@index([email])
+}
+
+model UserSkill {
+  id        String   @id @default(uuid())
+  userId    String
+  tag       String
+  level     Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tag])
+  @@index([userId])
 }

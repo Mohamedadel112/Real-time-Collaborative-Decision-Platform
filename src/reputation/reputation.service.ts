@@ -3,7 +3,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { UsersRepository } from '../users/users.repository';
 import { PromotionService } from './promotion.service';
 
-const REPUTATION_CORRECT   = 10;
+const REPUTATION_CORRECT = 10;
 const REPUTATION_INCORRECT = -3;
 
 @Injectable()

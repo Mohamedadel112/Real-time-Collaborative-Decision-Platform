@@ -6,18 +6,18 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SkillStrategy = void 0;
+exports.InviteModule = void 0;
 const common_1 = require("@nestjs/common");
-let SkillStrategy = class SkillStrategy {
-    calculate(context) {
-        if (!context.decisionDomain)
-            return 0;
-        const hasMatch = context.user.domainExpertise.includes(context.decisionDomain);
-        return hasMatch ? 1.5 : 0;
-    }
+const invite_controller_1 = require("./invite.controller");
+const invite_service_1 = require("./invite.service");
+let InviteModule = class InviteModule {
 };
-exports.SkillStrategy = SkillStrategy;
-exports.SkillStrategy = SkillStrategy = __decorate([
-    (0, common_1.Injectable)()
-], SkillStrategy);
-//# sourceMappingURL=skill.strategy.js.map
+exports.InviteModule = InviteModule;
+exports.InviteModule = InviteModule = __decorate([
+    (0, common_1.Module)({
+        controllers: [invite_controller_1.InviteController],
+        providers: [invite_service_1.InviteService],
+        exports: [invite_service_1.InviteService],
+    })
+], InviteModule);
+//# sourceMappingURL=invite.module.js.map

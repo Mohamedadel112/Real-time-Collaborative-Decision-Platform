@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
-import { User } from '@prisma/client';
+import { User, UserRole } from '@prisma/client';
 
 @Injectable()
 export class UsersRepository {
@@ -17,7 +17,7 @@ export class UsersRepository {
   async updateReputation(userId: string, delta: number): Promise<User> {
     return this.prisma.user.update({
       where: { id: userId },
-      data: { reputation: { increment: delta } },
+      data: { reputationScore: { increment: delta } },
     });
   }
 
@@ -31,11 +31,11 @@ export class UsersRepository {
     });
   }
 
-  async updateRole(userId: string, role: any): Promise<User> {
+  async updateRole(userId: string, role: UserRole): Promise<User> {
     return this.prisma.user.update({ where: { id: userId }, data: { role } });
   }
 
-  async updateDomainExpertise(userId: string, domains: string[]): Promise<User> {
-    return this.prisma.user.update({ where: { id: userId }, data: { domainExpertise: domains } });
-  }
+  // async updateDomainExpertise(userId: string, domains: string[]): Promise<User> {
+  //   return this.prisma.user.update({ where: { id: userId }, data: { domainExpertise: domains } });
+  // }
 }

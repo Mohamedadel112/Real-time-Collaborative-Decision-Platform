@@ -11,7 +11,12 @@ export class VoteRepository {
     });
   }
 
-  async create(data: { decisionId: string; optionId: string; userId: string; weight: number }) {
+  async create(data: {
+    decisionId: string;
+    optionId: string;
+    userId: string;
+    weight: number;
+  }) {
     return this.prisma.vote.create({ data });
   }
 

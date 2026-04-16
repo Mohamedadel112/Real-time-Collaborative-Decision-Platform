@@ -25,10 +25,11 @@ let UsersService = class UsersService {
                 email: true,
                 username: true,
                 role: true,
-                reputation: true,
+                reputationScore: true,
+                accuracyScore: true,
                 votesCount: true,
                 correctVotes: true,
-                domainExpertise: true,
+                skills: true,
                 createdAt: true,
             },
         });

@@ -25,7 +25,9 @@ export class WsJwtGuard implements CanActivate {
         secret: this.config.get('app.jwtSecret'),
       });
 
-      const user = await this.prisma.user.findUnique({ where: { id: payload.sub } });
+      const user = await this.prisma.user.findUnique({
+        where: { id: payload.sub },
+      });
       if (!user) throw new WsException('User not found');
 
       client.data.user = user;

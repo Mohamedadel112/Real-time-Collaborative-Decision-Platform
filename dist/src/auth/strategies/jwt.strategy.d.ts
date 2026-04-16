@@ -16,10 +16,11 @@ export declare class JwtStrategy extends JwtStrategy_base {
         role: import("@prisma/client").$Enums.UserRole;
         isEmailVerified: boolean;
         isInvitedByAdmin: boolean;
-        reputation: number;
+        invitedById: string | null;
+        reputationScore: number;
+        accuracyScore: number;
         votesCount: number;
         correctVotes: number;
-        domainExpertise: string[];
         createdAt: Date;
         updatedAt: Date;
     } | null>;

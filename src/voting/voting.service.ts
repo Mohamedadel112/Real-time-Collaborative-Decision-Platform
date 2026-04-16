@@ -7,7 +7,7 @@ import {
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../database/prisma.service';
 import { RedisService } from '../redis/redis.service';
-import { WeightService } from '../weight/weight.service';
+import { WeightService, WeightResult } from '../weight/weight.service';
 import { DecisionsRepository } from '../decisions/decisions.repository';
 import { VoteRepository } from './vote.repository';
 import { DecisionStatus } from '@prisma/client';
@@ -32,37 +32,63 @@ export class VotingService {
     }
 
     // 2. Check for duplicate vote (DB unique constraint as backup)
-    const existing = await this.voteRepo.findByUserAndDecision(userId, decisionId);
+    const existing = await this.voteRepo.findByUserAndDecision(
+      userId,
+      decisionId,
+    );
     if (existing) throw new ConflictException('Already voted on this decision');
 
     // 3. Redis lock to prevent race conditions
     const lockKey = `vote:${decisionId}:${userId}`;
-    const acquired = await this.redis.acquireLock(lockKey, 5000);
-    if (!acquired) throw new ConflictException('Vote is being processed, please retry');
+    const acquired = await this.redis.client.set(
+      lockKey,
+      'locked',
+      'PX',
+      5000,
+      'NX',
+    );
+    if (!acquired)
+      throw new ConflictException('Vote is being processed, please retry');
 
     try {
       // 4. Fetch user and calculate weight
-      const user = await this.prisma.user.findUnique({ where: { id: userId } });
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        include: { skills: true },
+      });
       if (!user) throw new NotFoundException('User not found');
 
-      const weight = this.weightService.calculateWeight(user, decision.domain ?? undefined);
+      const weightResult: WeightResult = this.weightService.calculateUserWeight(
+        user,
+        decision,
+      );
 
       // 5. Save the vote
-      const vote = await this.voteRepo.create({ decisionId, optionId, userId, weight });
+      const vote = await this.voteRepo.create({
+        decisionId,
+        optionId,
+        userId,
+        weight: weightResult.weight,
+      });
 
       // 6. Update option's aggregated weight in DB
-      await this.decisionRepo.updateOptionWeight(optionId, weight);
+      await this.decisionRepo.updateOptionWeight(optionId, weightResult.weight);
 
       // 7. Emit event for DecisionEngine to recalculate + broadcast
-      this.eventEmitter.emit('vote.cast', { decisionId, vote, weight, roomId: decision.roomId });
+      this.eventEmitter.emit('vote.cast', {
+        decisionId,
+        vote,
+        weight: weightResult.weight,
+        roomId: decision.roomId,
+      });
 
       return {
         voteId: vote.id,
-        weight,
-        breakdown: this.weightService.getWeightBreakdown(user, decision.domain ?? undefined),
+        weight: weightResult.weight,
+        breakdown: weightResult.explanation,
       };
     } finally {
-      await this.redis.releaseLock(lockKey);
+      await this.redis.client.del(lockKey);
     }
   }
 

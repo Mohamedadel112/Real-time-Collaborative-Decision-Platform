@@ -9,56 +9,73 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.WeightService = void 0;
+exports.WeightService = exports.DefaultWeightStrategy = void 0;
 const common_1 = require("@nestjs/common");
-const role_strategy_1 = require("./strategies/role.strategy");
-const reputation_strategy_1 = require("./strategies/reputation.strategy");
-const trusted_strategy_1 = require("./strategies/trusted.strategy");
-const skill_strategy_1 = require("./strategies/skill.strategy");
-const participation_strategy_1 = require("./strategies/participation.strategy");
-const MAX_TOTAL_WEIGHT = 8.0;
-let WeightService = class WeightService {
-    roleStrategy;
-    reputationStrategy;
-    trustedStrategy;
-    skillStrategy;
-    participationStrategy;
-    constructor(roleStrategy, reputationStrategy, trustedStrategy, skillStrategy, participationStrategy) {
-        this.roleStrategy = roleStrategy;
-        this.reputationStrategy = reputationStrategy;
-        this.trustedStrategy = trustedStrategy;
-        this.skillStrategy = skillStrategy;
-        this.participationStrategy = participationStrategy;
-    }
-    calculateWeight(user, decisionDomain) {
-        const context = { user, decisionDomain };
-        const roleWeight = this.roleStrategy.calculate(context);
-        const repBonus = this.reputationStrategy.calculate(context);
-        const trustedBonus = this.trustedStrategy.calculate(context);
-        const skillBonus = this.skillStrategy.calculate(context);
-        const partBonus = this.participationStrategy.calculate(context);
-        const total = roleWeight + repBonus + trustedBonus + skillBonus + partBonus;
-        return Math.min(total, MAX_TOTAL_WEIGHT);
-    }
-    getWeightBreakdown(user, decisionDomain) {
-        const context = { user, decisionDomain };
-        return {
-            role: this.roleStrategy.calculate(context),
-            reputation: this.reputationStrategy.calculate(context),
-            trusted: this.trustedStrategy.calculate(context),
-            skill: this.skillStrategy.calculate(context),
-            participation: this.participationStrategy.calculate(context),
-            total: this.calculateWeight(user, decisionDomain),
+let DefaultWeightStrategy = class DefaultWeightStrategy {
+    calculate(user, decision) {
+        const breakdown = {
+            base: 1,
+            trusted: 0,
+            warmStart: 0,
+            skill: 0,
+            reputation: 0,
+            accuracy: 0,
         };
+        if (user.isInvitedByAdmin)
+            breakdown.trusted = 2;
+        if (user.reputationScore === 0)
+            breakdown.warmStart = 1;
+        if (decision.domain && user.skills) {
+            const hasSkill = user.skills.some((skill) => skill.tag === decision.domain);
+            if (hasSkill)
+                breakdown.skill = 2;
+        }
+        breakdown.reputation = parseFloat((user.reputationScore * 0.1).toFixed(2));
+        breakdown.accuracy = parseFloat((user.accuracyScore * 0.2).toFixed(2));
+        const totalWeight = breakdown.base +
+            breakdown.trusted +
+            breakdown.warmStart +
+            breakdown.skill +
+            breakdown.reputation +
+            breakdown.accuracy;
+        const explanation = [];
+        if (breakdown.base > 0)
+            explanation.push(`+${breakdown.base} Base`);
+        if (breakdown.trusted > 0)
+            explanation.push(`+${breakdown.trusted} Trusted User`);
+        if (breakdown.warmStart > 0)
+            explanation.push(`+${breakdown.warmStart} Warm Start`);
+        if (breakdown.skill > 0)
+            explanation.push(`+${breakdown.skill} Skill Match`);
+        if (breakdown.reputation > 0)
+            explanation.push(`+${breakdown.reputation} Reputation`);
+        if (breakdown.accuracy > 0)
+            explanation.push(`+${breakdown.accuracy} Accuracy`);
+        return {
+            weight: parseFloat(totalWeight.toFixed(2)),
+            explanation,
+        };
+    }
+};
+exports.DefaultWeightStrategy = DefaultWeightStrategy;
+exports.DefaultWeightStrategy = DefaultWeightStrategy = __decorate([
+    (0, common_1.Injectable)()
+], DefaultWeightStrategy);
+let WeightService = class WeightService {
+    strategy;
+    constructor(strategy) {
+        this.strategy = strategy;
+    }
+    setStrategy(strategy) {
+        this.strategy = strategy;
+    }
+    calculateUserWeight(user, decision) {
+        return this.strategy.calculate(user, decision);
     }
 };
 exports.WeightService = WeightService;
 exports.WeightService = WeightService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [role_strategy_1.RoleStrategy,
-        reputation_strategy_1.ReputationStrategy,
-        trusted_strategy_1.TrustedStrategy,
-        skill_strategy_1.SkillStrategy,
-        participation_strategy_1.ParticipationStrategy])
+    __metadata("design:paramtypes", [DefaultWeightStrategy])
 ], WeightService);
 //# sourceMappingURL=weight.service.js.map

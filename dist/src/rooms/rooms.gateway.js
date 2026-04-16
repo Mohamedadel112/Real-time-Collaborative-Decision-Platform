@@ -30,7 +30,9 @@ let RoomsGateway = class RoomsGateway {
     async handleDisconnect(client) {
         for (const roomId of client.data.rooms ?? []) {
             await this.roomsService.removePresence(roomId, client.data.user?.id);
-            this.server.to(roomId).emit('user:left', { userId: client.data.user?.id, roomId });
+            this.server
+                .to(roomId)
+                .emit('user:left', { userId: client.data.user?.id, roomId });
         }
     }
     async handleJoinRoom(client, payload) {
@@ -43,7 +45,9 @@ let RoomsGateway = class RoomsGateway {
         client.data.rooms?.add(roomId);
         await this.roomsService.addPresence(roomId, user.id);
         const presence = await this.roomsService.getPresence(roomId);
-        this.server.to(roomId).emit('room:presence', { roomId, onlineUsers: presence });
+        this.server
+            .to(roomId)
+            .emit('room:presence', { roomId, onlineUsers: presence });
         return { event: 'room:joined', roomId };
     }
     async handleLeaveRoom(client, payload) {
@@ -53,7 +57,9 @@ let RoomsGateway = class RoomsGateway {
         client.data.rooms?.delete(roomId);
         await this.roomsService.removePresence(roomId, user.id);
         const presence = await this.roomsService.getPresence(roomId);
-        this.server.to(roomId).emit('room:presence', { roomId, onlineUsers: presence });
+        this.server
+            .to(roomId)
+            .emit('room:presence', { roomId, onlineUsers: presence });
         return { event: 'room:left', roomId };
     }
     broadcastToRoom(roomId, event, data) {

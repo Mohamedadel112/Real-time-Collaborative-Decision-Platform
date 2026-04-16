@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { DecisionsRepository } from './decisions.repository';
 import { CreateDecisionDto } from './dto/create-decision.dto';
@@ -12,7 +16,13 @@ export class DecisionsService {
   ) {}
 
   async create(roomId: string, dto: CreateDecisionDto) {
-    return this.repo.create(roomId, dto.title, dto.description, dto.domain, dto.options);
+    return this.repo.create(
+      roomId,
+      dto.title,
+      dto.description,
+      dto.domain,
+      dto.options,
+    );
   }
 
   async findByRoom(roomId: string) {
@@ -27,17 +37,26 @@ export class DecisionsService {
 
   async close(id: string, userId: string) {
     const decision = await this.findOne(id);
-    const room = await this.prisma.room.findUnique({ where: { id: decision.roomId } });
-    if (room?.ownerId !== userId) throw new ForbiddenException('Only room owner can close decisions');
+    const room = await this.prisma.room.findUnique({
+      where: { id: decision.roomId },
+    });
+    if (room?.ownerId !== userId)
+      throw new ForbiddenException('Only room owner can close decisions');
 
-    await this.repo.updateStatus(id, { status: DecisionStatus.CLOSED, closedAt: new Date() });
+    await this.repo.updateStatus(id, {
+      status: DecisionStatus.CLOSED,
+      closedAt: new Date(),
+    });
     return this.findOne(id);
   }
 
   async manualValidate(id: string, winningOptionId: string, userId: string) {
     const decision = await this.findOne(id);
-    const room = await this.prisma.room.findUnique({ where: { id: decision.roomId } });
-    if (room?.ownerId !== userId) throw new ForbiddenException('Only room owner can validate');
+    const room = await this.prisma.room.findUnique({
+      where: { id: decision.roomId },
+    });
+    if (room?.ownerId !== userId)
+      throw new ForbiddenException('Only room owner can validate');
 
     await this.repo.updateStatus(id, {
       status: DecisionStatus.VALIDATED,

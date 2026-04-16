@@ -17,10 +17,14 @@ const adapter_pg_1 = require("@prisma/adapter-pg");
 let PrismaService = PrismaService_1 = class PrismaService extends client_1.PrismaClient {
     logger = new common_1.Logger(PrismaService_1.name);
     constructor() {
-        const adapter = new adapter_pg_1.PrismaPg({ connectionString: process.env.DATABASE_URL });
+        const adapter = new adapter_pg_1.PrismaPg({
+            connectionString: process.env.DATABASE_URL,
+        });
         super({
             adapter,
-            log: process.env.NODE_ENV === 'development' ? ['query', 'warn', 'error'] : ['warn', 'error'],
+            log: process.env.NODE_ENV === 'development'
+                ? ['query', 'warn', 'error']
+                : ['warn', 'error'],
         });
     }
     async onModuleInit() {

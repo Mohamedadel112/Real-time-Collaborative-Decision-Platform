@@ -44,25 +44,38 @@ let VotingService = class VotingService {
         if (existing)
             throw new common_1.ConflictException('Already voted on this decision');
         const lockKey = `vote:${decisionId}:${userId}`;
-        const acquired = await this.redis.acquireLock(lockKey, 5000);
+        const acquired = await this.redis.client.set(lockKey, 'locked', 'PX', 5000, 'NX');
         if (!acquired)
             throw new common_1.ConflictException('Vote is being processed, please retry');
         try {
-            const user = await this.prisma.user.findUnique({ where: { id: userId } });
+            const user = await this.prisma.user.findUnique({
+                where: { id: userId },
+                include: { skills: true },
+            });
             if (!user)
                 throw new common_1.NotFoundException('User not found');
-            const weight = this.weightService.calculateWeight(user, decision.domain ?? undefined);
-            const vote = await this.voteRepo.create({ decisionId, optionId, userId, weight });
-            await this.decisionRepo.updateOptionWeight(optionId, weight);
-            this.eventEmitter.emit('vote.cast', { decisionId, vote, weight, roomId: decision.roomId });
+            const weightResult = this.weightService.calculateUserWeight(user, decision);
+            const vote = await this.voteRepo.create({
+                decisionId,
+                optionId,
+                userId,
+                weight: weightResult.weight,
+            });
+            await this.decisionRepo.updateOptionWeight(optionId, weightResult.weight);
+            this.eventEmitter.emit('vote.cast', {
+                decisionId,
+                vote,
+                weight: weightResult.weight,
+                roomId: decision.roomId,
+            });
             return {
                 voteId: vote.id,
-                weight,
-                breakdown: this.weightService.getWeightBreakdown(user, decision.domain ?? undefined),
+                weight: weightResult.weight,
+                breakdown: weightResult.explanation,
             };
         }
         finally {
-            await this.redis.releaseLock(lockKey);
+            await this.redis.client.del(lockKey);
         }
     }
     async getVotes(decisionId) {
