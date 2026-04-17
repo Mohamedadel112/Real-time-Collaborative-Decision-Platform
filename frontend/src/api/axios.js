@@ -14,13 +14,18 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle 401 globally
+// Handle 401 globally — only redirect for expired/invalid token, not role errors
 api.interceptors.response.use(
   (res) => res,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('access_token');
-      window.location.href = '/login';
+      const msg = error.response?.data?.message || '';
+      // Role-based denials (e.g. "Only admins can...") should NOT redirect
+      const isRoleDenied = msg.includes('Only admins') || msg.includes('only admins');
+      if (!isRoleDenied) {
+        localStorage.removeItem('access_token');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

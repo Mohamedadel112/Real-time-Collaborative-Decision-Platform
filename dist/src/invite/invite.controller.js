@@ -14,12 +14,17 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.InviteController = void 0;
 const common_1 = require("@nestjs/common");
+const passport_1 = require("@nestjs/passport");
+const jwt_1 = require("@nestjs/jwt");
 const invite_service_1 = require("./invite.service");
 const create_invite_dto_1 = require("./dto/create-invite.dto");
+const accept_invite_dto_1 = require("./dto/accept-invite.dto");
 let InviteController = class InviteController {
     inviteService;
-    constructor(inviteService) {
+    jwtService;
+    constructor(inviteService, jwtService) {
         this.inviteService = inviteService;
+        this.jwtService = jwtService;
     }
     async createInvite(req, createInviteDto) {
         const admin = req.user;
@@ -35,10 +40,29 @@ let InviteController = class InviteController {
         }
         return this.inviteService.getInvitesByAdmin(admin.userId || admin.id);
     }
+    async acceptInvite(dto) {
+        const user = await this.inviteService.acceptInvite(dto.token, {
+            username: dto.username,
+            password: dto.password,
+        });
+        const payload = { sub: user.id, email: user.email, role: user.role };
+        const accessToken = this.jwtService.sign(payload);
+        return {
+            access_token: accessToken,
+            user: {
+                id: user.id,
+                email: user.email,
+                username: user.username,
+                role: user.role,
+                reputationScore: user.reputationScore,
+            },
+        };
+    }
 };
 exports.InviteController = InviteController;
 __decorate([
     (0, common_1.Post)(),
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -47,13 +71,22 @@ __decorate([
 ], InviteController.prototype, "createInvite", null);
 __decorate([
     (0, common_1.Get)('history'),
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], InviteController.prototype, "getInvites", null);
+__decorate([
+    (0, common_1.Post)('accept'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [accept_invite_dto_1.AcceptInviteDto]),
+    __metadata("design:returntype", Promise)
+], InviteController.prototype, "acceptInvite", null);
 exports.InviteController = InviteController = __decorate([
     (0, common_1.Controller)('admin/invite'),
-    __metadata("design:paramtypes", [invite_service_1.InviteService])
+    __metadata("design:paramtypes", [invite_service_1.InviteService,
+        jwt_1.JwtService])
 ], InviteController);
 //# sourceMappingURL=invite.controller.js.map

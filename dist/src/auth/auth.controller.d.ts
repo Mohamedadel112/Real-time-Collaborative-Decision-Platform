@@ -24,4 +24,15 @@ export declare class AuthController {
             reputation: any;
         };
     }>;
+    getProfile(req: any): Promise<{
+        id: string;
+        email: string;
+        username: string;
+        role: import("@prisma/client").$Enums.UserRole;
+        reputationScore: number;
+        accuracyScore: number;
+        votesCount: number;
+        correctVotes: number;
+        isInvitedByAdmin: boolean;
+    } | null>;
 }

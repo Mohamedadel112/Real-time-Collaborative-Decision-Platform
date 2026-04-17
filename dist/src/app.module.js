@@ -22,6 +22,7 @@ const decision_engine_module_1 = require("./decision-engine/decision-engine.modu
 const reputation_module_1 = require("./reputation/reputation.module");
 const invite_module_1 = require("./invite/invite.module");
 const events_module_1 = require("./gateway/events.module");
+const email_module_1 = require("./email/email.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -46,6 +47,7 @@ exports.AppModule = AppModule = __decorate([
             reputation_module_1.ReputationModule,
             invite_module_1.InviteModule,
             events_module_1.EventsModule,
+            email_module_1.EmailModule,
         ],
     })
 ], AppModule);

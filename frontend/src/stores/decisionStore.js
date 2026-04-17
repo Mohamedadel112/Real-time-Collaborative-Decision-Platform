@@ -6,6 +6,7 @@ const useDecisionStore = create((set) => ({
   currentDecision: null,
   isLoading: false,
   error: null,
+  weightResult: null,
 
   fetchDecisions: async (roomId) => {
     set({ isLoading: true, error: null });
@@ -59,6 +60,9 @@ const useDecisionStore = create((set) => ({
   },
 
   clearCurrentDecision: () => set({ currentDecision: null }),
+
+  setWeightResult: (result) => set({ weightResult: result }),
+  clearWeightResult: () => set({ weightResult: null }),
 }));
 
 export default useDecisionStore;

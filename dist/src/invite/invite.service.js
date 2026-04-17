@@ -45,15 +45,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.InviteService = void 0;
 const common_1 = require("@nestjs/common");
 const crypto = __importStar(require("crypto"));
+const bcrypt = __importStar(require("bcrypt"));
 const prisma_service_1 = require("../database/prisma.service");
 const redis_service_1 = require("../redis/redis.service");
+const email_service_1 = require("../email/email.service");
 const client_1 = require("@prisma/client");
 let InviteService = class InviteService {
     prisma;
     redisService;
-    constructor(prisma, redisService) {
+    emailService;
+    constructor(prisma, redisService, emailService) {
         this.prisma = prisma;
         this.redisService = redisService;
+        this.emailService = emailService;
     }
     async createInvite(adminId, email) {
         const existingUser = await this.prisma.user.findUnique({
@@ -78,6 +82,7 @@ let InviteService = class InviteService {
             data: { email, token, expiresAt, invitedById: adminId },
         });
         await this.redisService.setWithExpiry(`token:${token}`, 'VALID', 72 * 3600);
+        await this.emailService.sendInviteEmail(email, token);
         return invite;
     }
     async getInvitesByAdmin(adminId) {
@@ -97,6 +102,13 @@ let InviteService = class InviteService {
             invite.expiresAt < new Date()) {
             throw new common_1.BadRequestException('Token invalid or expired.');
         }
+        const existingUser = await this.prisma.user.findUnique({
+            where: { username: userData.username },
+        });
+        if (existingUser) {
+            throw new common_1.ConflictException('Username already taken.');
+        }
+        const passwordHash = await bcrypt.hash(userData.password, 12);
         return this.prisma.$transaction(async (tx) => {
             await tx.invite.update({
                 where: { id: invite.id },
@@ -104,8 +116,9 @@ let InviteService = class InviteService {
             });
             const user = await tx.user.create({
                 data: {
-                    ...userData,
                     email: invite.email,
+                    username: userData.username,
+                    passwordHash,
                     role: client_1.UserRole.TRUSTED_USER,
                     isInvitedByAdmin: true,
                     invitedById: invite.invitedById,
@@ -120,6 +133,7 @@ exports.InviteService = InviteService;
 exports.InviteService = InviteService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
-        redis_service_1.RedisService])
+        redis_service_1.RedisService,
+        email_service_1.EmailService])
 ], InviteService);
 //# sourceMappingURL=invite.service.js.map

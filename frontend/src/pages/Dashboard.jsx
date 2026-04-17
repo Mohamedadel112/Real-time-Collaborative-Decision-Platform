@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, ArrowRight, TrendingUp, Users, CheckCircle, Clock } from 'lucide-react';
+import { Plus, ArrowRight, TrendingUp, Users, CheckCircle, Clock, Target } from 'lucide-react';
 import AppLayout from '../components/AppLayout';
+import RoleBadge from '../components/RoleBadge';
 import useRoomStore from '../stores/roomStore';
 import useDecisionStore from '../stores/decisionStore';
 import useAuthStore from '../stores/authStore';
@@ -17,12 +18,14 @@ const statusBadge = (status) => {
 };
 
 export default function Dashboard() {
-  const { user } = useAuthStore();
+  const { user, fetchProfile } = useAuthStore();
   const { rooms, fetchRooms } = useRoomStore();
   const { decisions, fetchDecisions } = useDecisionStore();
 
   useEffect(() => {
     fetchRooms();
+    // Hydrate user profile on mount if missing
+    if (!user) fetchProfile();
   }, []);
 
   // Aggregate stats
@@ -43,6 +46,7 @@ export default function Dashboard() {
     { label: 'Reputation Score', value: user?.reputation?.toFixed(1) ?? '—', icon: TrendingUp, color: 'text-emerald-500' },
     { label: 'Total Votes Cast', value: totalVotes, icon: CheckCircle, color: 'text-blue-500' },
     { label: 'Active Rooms', value: rooms.length, icon: Users, color: 'text-violet-500' },
+    { label: 'Accuracy Score', value: user?.accuracyScore?.toFixed(1) ?? '—', icon: Target, color: 'text-cyan-500' },
     { label: 'Correct Votes', value: user?.correctVotes ?? '—', icon: Clock, color: 'text-amber-500' },
   ];
 
@@ -59,6 +63,7 @@ export default function Dashboard() {
             <p className="text-[#45464d] mt-1.5 text-sm">
               Your voting weight is currently in the {percentile} of all active participants.
             </p>
+            {user?.role && <div className="mt-2"><RoleBadge role={user.role} /></div>}
           </div>
 
           {/* Command actions */}

@@ -1,9 +1,11 @@
 import { PrismaService } from '../database/prisma.service';
 import { RedisService } from '../redis/redis.service';
+import { EmailService } from '../email/email.service';
 export declare class InviteService {
     private readonly prisma;
     private readonly redisService;
-    constructor(prisma: PrismaService, redisService: RedisService);
+    private readonly emailService;
+    constructor(prisma: PrismaService, redisService: RedisService, emailService: EmailService);
     createInvite(adminId: string, email: string): Promise<{
         email: string;
         id: string;
@@ -24,7 +26,10 @@ export declare class InviteService {
         expiresAt: Date;
         acceptedAt: Date | null;
     }[]>;
-    acceptInvite(token: string, userData: any): Promise<{
+    acceptInvite(token: string, userData: {
+        username: string;
+        password: string;
+    }): Promise<{
         email: string;
         username: string;
         id: string;

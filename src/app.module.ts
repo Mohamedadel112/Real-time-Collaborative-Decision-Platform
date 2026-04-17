@@ -13,6 +13,7 @@ import { DecisionEngineModule } from './decision-engine/decision-engine.module';
 import { ReputationModule } from './reputation/reputation.module';
 import { InviteModule } from './invite/invite.module';
 import { EventsModule } from './gateway/events.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { EventsModule } from './gateway/events.module';
     ReputationModule,
     InviteModule,
     EventsModule,
+    EmailModule,
   ],
 })
 export class AppModule {}

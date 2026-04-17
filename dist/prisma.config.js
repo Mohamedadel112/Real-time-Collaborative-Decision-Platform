@@ -40,5 +40,8 @@ exports.default = (0, config_1.defineConfig)({
     datasource: {
         url: process.env.DATABASE_URL,
     },
+    migrations: {
+        seed: 'node prisma/seed.js',
+    },
 });
 //# sourceMappingURL=prisma.config.js.map

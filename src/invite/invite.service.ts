@@ -4,8 +4,10 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import * as crypto from 'crypto';
+import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../database/prisma.service';
 import { RedisService } from '../redis/redis.service';
+import { EmailService } from '../email/email.service';
 import { UserRole } from '@prisma/client';
 
 @Injectable()
@@ -13,6 +15,7 @@ export class InviteService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly redisService: RedisService,
+    private readonly emailService: EmailService,
   ) {}
 
   async createInvite(adminId: string, email: string) {
@@ -50,6 +53,9 @@ export class InviteService {
     // Cache the invite token in Redis for quick validation
     await this.redisService.setWithExpiry(`token:${token}`, 'VALID', 72 * 3600);
 
+    // Send invite email
+    await this.emailService.sendInviteEmail(email, token);
+
     return invite;
   }
 
@@ -60,7 +66,10 @@ export class InviteService {
     });
   }
 
-  async acceptInvite(token: string, userData: any) {
+  async acceptInvite(
+    token: string,
+    userData: { username: string; password: string },
+  ) {
     // Quick validation with Redis
     const isValid = await this.redisService.get(`token:${token}`);
     if (!isValid) {
@@ -76,6 +85,17 @@ export class InviteService {
       throw new BadRequestException('Token invalid or expired.');
     }
 
+    // Check if username is taken
+    const existingUser = await this.prisma.user.findUnique({
+      where: { username: userData.username },
+    });
+    if (existingUser) {
+      throw new ConflictException('Username already taken.');
+    }
+
+    // Hash password
+    const passwordHash = await bcrypt.hash(userData.password, 12);
+
     return this.prisma.$transaction(async (tx) => {
       await tx.invite.update({
         where: { id: invite.id },
@@ -84,9 +104,10 @@ export class InviteService {
 
       const user = await tx.user.create({
         data: {
-          ...userData,
           email: invite.email,
-          role: UserRole.TRUSTED_USER, // Or USER with flag
+          username: userData.username,
+          passwordHash,
+          role: UserRole.TRUSTED_USER,
           isInvitedByAdmin: true,
           invitedById: invite.invitedById,
         },
