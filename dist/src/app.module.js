@@ -20,6 +20,9 @@ const voting_module_1 = require("./voting/voting.module");
 const weight_module_1 = require("./weight/weight.module");
 const decision_engine_module_1 = require("./decision-engine/decision-engine.module");
 const reputation_module_1 = require("./reputation/reputation.module");
+const invite_module_1 = require("./invite/invite.module");
+const events_module_1 = require("./gateway/events.module");
+const email_module_1 = require("./email/email.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -29,7 +32,11 @@ exports.AppModule = AppModule = __decorate([
             config_module_1.ConfigModule,
             database_module_1.DatabaseModule,
             redis_module_1.RedisModule,
-            event_emitter_1.EventEmitterModule.forRoot({ wildcard: false, delimiter: '.', global: true }),
+            event_emitter_1.EventEmitterModule.forRoot({
+                wildcard: false,
+                delimiter: '.',
+                global: true,
+            }),
             auth_module_1.AuthModule,
             users_module_1.UsersModule,
             rooms_module_1.RoomsModule,
@@ -38,6 +45,9 @@ exports.AppModule = AppModule = __decorate([
             voting_module_1.VotingModule,
             decision_engine_module_1.DecisionEngineModule,
             reputation_module_1.ReputationModule,
+            invite_module_1.InviteModule,
+            events_module_1.EventsModule,
+            email_module_1.EmailModule,
         ],
     })
 ], AppModule);

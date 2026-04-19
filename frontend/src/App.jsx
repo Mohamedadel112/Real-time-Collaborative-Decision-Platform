@@ -5,6 +5,8 @@ import Rooms from './pages/Rooms';
 import RoomDetail from './pages/RoomDetail';
 import DecisionDetails from './pages/DecisionDetails';
 import Reputation from './pages/Reputation';
+import AcceptInvite from './pages/AcceptInvite';
+import Admin from './pages/Admin';
 import ProtectedRoute from './components/ProtectedRoute';
 import AppLayout from './components/AppLayout';
 
@@ -25,6 +27,7 @@ export default function App() {
       <Routes>
         {/* Public */}
         <Route path="/login" element={<Login />} />
+        <Route path="/accept-invite" element={<AcceptInvite />} />
 
         {/* Protected */}
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -36,6 +39,7 @@ export default function App() {
         <Route path="/analytics" element={<ProtectedRoute><PlaceholderPage title="Analytics" /></ProtectedRoute>} />
         <Route path="/guidelines" element={<ProtectedRoute><PlaceholderPage title="Guidelines" /></ProtectedRoute>} />
         <Route path="/archives" element={<ProtectedRoute><PlaceholderPage title="Archives" /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
 
         {/* Default */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

@@ -35,15 +35,22 @@ let DecisionsService = class DecisionsService {
     }
     async close(id, userId) {
         const decision = await this.findOne(id);
-        const room = await this.prisma.room.findUnique({ where: { id: decision.roomId } });
+        const room = await this.prisma.room.findUnique({
+            where: { id: decision.roomId },
+        });
         if (room?.ownerId !== userId)
             throw new common_1.ForbiddenException('Only room owner can close decisions');
-        await this.repo.updateStatus(id, { status: client_1.DecisionStatus.CLOSED, closedAt: new Date() });
+        await this.repo.updateStatus(id, {
+            status: client_1.DecisionStatus.CLOSED,
+            closedAt: new Date(),
+        });
         return this.findOne(id);
     }
     async manualValidate(id, winningOptionId, userId) {
         const decision = await this.findOne(id);
-        const room = await this.prisma.room.findUnique({ where: { id: decision.roomId } });
+        const room = await this.prisma.room.findUnique({
+            where: { id: decision.roomId },
+        });
         if (room?.ownerId !== userId)
             throw new common_1.ForbiddenException('Only room owner can validate');
         await this.repo.updateStatus(id, {

@@ -6,14 +6,7 @@ export declare class VotingController {
     castVote(decisionId: string, dto: CastVoteDto, user: any): Promise<{
         voteId: string;
         weight: number;
-        breakdown: {
-            role: number;
-            reputation: number;
-            trusted: number;
-            skill: number;
-            participation: number;
-            total: number;
-        };
+        breakdown: string[];
     }>;
     getVotes(decisionId: string): Promise<({
         user: {

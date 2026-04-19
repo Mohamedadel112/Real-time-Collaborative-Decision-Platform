@@ -1,5 +1,11 @@
 import {
-  Body, Controller, Get, Param, Post, Patch, UseGuards,
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Patch,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { DecisionsService } from './decisions.service';
@@ -12,10 +18,7 @@ export class DecisionsController {
   constructor(private readonly decisionsService: DecisionsService) {}
 
   @Post()
-  create(
-    @Param('roomId') roomId: string,
-    @Body() dto: CreateDecisionDto,
-  ) {
+  create(@Param('roomId') roomId: string, @Body() dto: CreateDecisionDto) {
     return this.decisionsService.create(roomId, dto);
   }
 
@@ -40,6 +43,10 @@ export class DecisionsController {
     @Body() body: { winningOptionId: string },
     @CurrentUser() user: any,
   ) {
-    return this.decisionsService.manualValidate(id, body.winningOptionId, user.id);
+    return this.decisionsService.manualValidate(
+      id,
+      body.winningOptionId,
+      user.id,
+    );
   }
 }

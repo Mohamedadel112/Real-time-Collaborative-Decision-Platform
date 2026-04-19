@@ -6,7 +6,13 @@ import { Decision } from '@prisma/client';
 export class DecisionsRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(roomId: string, title: string, description: string | undefined, domain: string | undefined, optionLabels: string[]): Promise<Decision> {
+  async create(
+    roomId: string,
+    title: string,
+    description: string | undefined,
+    domain: string | undefined,
+    optionLabels: string[],
+  ): Promise<Decision> {
     return this.prisma.decision.create({
       data: {
         roomId,

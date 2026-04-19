@@ -22,4 +22,4 @@ import { WsJwtGuard } from './guards/ws-jwt.guard';
   providers: [AuthService, JwtStrategy, WsJwtGuard],
   exports: [AuthService, JwtModule, WsJwtGuard],
 })
-export class AuthModule { }
+export class AuthModule {}

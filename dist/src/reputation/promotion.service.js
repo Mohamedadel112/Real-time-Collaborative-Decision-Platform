@@ -33,7 +33,7 @@ let PromotionService = PromotionService_1 = class PromotionService {
         if (user.role === client_1.UserRole.ADMIN)
             return;
         const accuracy = user.votesCount > 0 ? (user.correctVotes / user.votesCount) * 100 : 0;
-        const qualifiesForExpert = user.reputation >= EXPERT_REPUTATION_THRESHOLD &&
+        const qualifiesForExpert = user.reputationScore >= EXPERT_REPUTATION_THRESHOLD &&
             accuracy >= EXPERT_ACCURACY_THRESHOLD &&
             user.votesCount >= EXPERT_VOTES_THRESHOLD;
         if (qualifiesForExpert && user.role !== client_1.UserRole.EXPERT) {

@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, Vote, Award, BarChart2, LogOut, Scale } from 'lucide-react';
+import { LayoutDashboard, Users, Vote, Award, BarChart2, LogOut, Scale, Settings } from 'lucide-react';
 import useAuthStore from '../stores/authStore';
 
 const navItems = [
@@ -11,8 +11,9 @@ const navItems = [
 ];
 
 export default function Sidebar() {
-  const { logout } = useAuthStore();
+  const { logout, user } = useAuthStore();
   const navigate = useNavigate();
+  const isAdmin = user?.role === 'ADMIN';
 
   const handleLogout = () => {
     logout();
@@ -66,6 +67,19 @@ export default function Sidebar() {
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/50 hover:text-white hover:bg-white/5 transition-all"
           >
             Archives
+          </NavLink>
+          <NavLink
+            to="/admin"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                isActive
+                  ? 'bg-violet-500/20 text-violet-300'
+                  : 'text-white/50 hover:text-white hover:bg-white/5'
+              }`
+            }
+          >
+            <Settings className="w-4 h-4 shrink-0" />
+            Admin
           </NavLink>
         </div>
       </nav>

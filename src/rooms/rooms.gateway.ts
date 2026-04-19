@@ -29,7 +29,9 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // Remove from all rooms presence
     for (const roomId of client.data.rooms ?? []) {
       await this.roomsService.removePresence(roomId, client.data.user?.id);
-      this.server.to(roomId).emit('user:left', { userId: client.data.user?.id, roomId });
+      this.server
+        .to(roomId)
+        .emit('user:left', { userId: client.data.user?.id, roomId });
     }
   }
 
@@ -50,7 +52,9 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     await this.roomsService.addPresence(roomId, user.id);
 
     const presence = await this.roomsService.getPresence(roomId);
-    this.server.to(roomId).emit('room:presence', { roomId, onlineUsers: presence });
+    this.server
+      .to(roomId)
+      .emit('room:presence', { roomId, onlineUsers: presence });
     return { event: 'room:joined', roomId };
   }
 
@@ -68,7 +72,9 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     await this.roomsService.removePresence(roomId, user.id);
 
     const presence = await this.roomsService.getPresence(roomId);
-    this.server.to(roomId).emit('room:presence', { roomId, onlineUsers: presence });
+    this.server
+      .to(roomId)
+      .emit('room:presence', { roomId, onlineUsers: presence });
     return { event: 'room:left', roomId };
   }
 

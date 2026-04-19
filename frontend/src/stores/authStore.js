@@ -36,6 +36,36 @@ const useAuthStore = create((set) => ({
     }
   },
 
+  acceptInvite: async (token, userData) => {
+    set({ isLoading: true, error: null });
+    try {
+      const { data } = await api.post('/admin/invite/accept', { token, ...userData });
+      // If the backend returns a token, auto-login
+      if (data.access_token) {
+        localStorage.setItem('access_token', data.access_token);
+        set({ token: data.access_token, user: data.user, isAuthenticated: true, isLoading: false });
+      } else {
+        set({ isLoading: false });
+      }
+      return data;
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Failed to accept invite.';
+      set({ error: msg, isLoading: false });
+      throw err;
+    }
+  },
+
+  fetchProfile: async () => {
+    try {
+      const { data } = await api.get('/auth/me');
+      set({ user: data });
+      return data;
+    } catch (err) {
+      // Silent fail — user may not have a valid token
+      console.warn('Failed to fetch profile:', err.response?.status);
+    }
+  },
+
   logout: () => {
     localStorage.removeItem('access_token');
     set({ user: null, token: null, isAuthenticated: false });

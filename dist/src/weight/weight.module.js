@@ -9,23 +9,20 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.WeightModule = void 0;
 const common_1 = require("@nestjs/common");
 const weight_service_1 = require("./weight.service");
-const role_strategy_1 = require("./strategies/role.strategy");
-const reputation_strategy_1 = require("./strategies/reputation.strategy");
-const trusted_strategy_1 = require("./strategies/trusted.strategy");
-const skill_strategy_1 = require("./strategies/skill.strategy");
-const participation_strategy_1 = require("./strategies/participation.strategy");
 let WeightModule = class WeightModule {
 };
 exports.WeightModule = WeightModule;
 exports.WeightModule = WeightModule = __decorate([
     (0, common_1.Module)({
         providers: [
-            weight_service_1.WeightService,
-            role_strategy_1.RoleStrategy,
-            reputation_strategy_1.ReputationStrategy,
-            trusted_strategy_1.TrustedStrategy,
-            skill_strategy_1.SkillStrategy,
-            participation_strategy_1.ParticipationStrategy,
+            weight_service_1.DefaultWeightStrategy,
+            {
+                provide: weight_service_1.WeightService,
+                useFactory: (defaultStrategy) => {
+                    return new weight_service_1.WeightService(defaultStrategy);
+                },
+                inject: [weight_service_1.DefaultWeightStrategy],
+            },
         ],
         exports: [weight_service_1.WeightService],
     })

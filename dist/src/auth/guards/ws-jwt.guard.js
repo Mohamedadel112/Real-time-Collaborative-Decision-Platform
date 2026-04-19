@@ -34,7 +34,9 @@ let WsJwtGuard = class WsJwtGuard {
             const payload = this.jwtService.verify(token, {
                 secret: this.config.get('app.jwtSecret'),
             });
-            const user = await this.prisma.user.findUnique({ where: { id: payload.sub } });
+            const user = await this.prisma.user.findUnique({
+                where: { id: payload.sub },
+            });
             if (!user)
                 throw new websockets_1.WsException('User not found');
             client.data.user = user;

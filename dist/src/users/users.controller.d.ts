@@ -7,10 +7,18 @@ export declare class UsersController {
         username: string;
         id: string;
         role: import("@prisma/client").$Enums.UserRole;
-        reputation: number;
+        reputationScore: number;
+        accuracyScore: number;
         votesCount: number;
         correctVotes: number;
-        domainExpertise: string[];
         createdAt: Date;
+        skills: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            userId: string;
+            tag: string;
+            level: number;
+        }[];
     }>;
 }

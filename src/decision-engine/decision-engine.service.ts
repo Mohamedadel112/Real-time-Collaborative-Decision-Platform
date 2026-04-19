@@ -5,8 +5,8 @@ import { RoomsGateway } from '../rooms/rooms.gateway';
 import { DecisionStatus } from '@prisma/client';
 
 // Confidence thresholds as per PRD
-const CONFIDENCE_VALID = 0.70;
-const CONFIDENCE_WEAK  = 0.50;
+const CONFIDENCE_VALID = 0.7;
+const CONFIDENCE_WEAK = 0.5;
 
 @Injectable()
 export class DecisionEngineService {
@@ -18,7 +18,12 @@ export class DecisionEngineService {
   ) {}
 
   @OnEvent('vote.cast', { async: true })
-  async handleVoteCast(payload: { decisionId: string; vote: any; weight: number; roomId: string }) {
+  async handleVoteCast(payload: {
+    decisionId: string;
+    vote: any;
+    weight: number;
+    roomId: string;
+  }) {
     const { decisionId, roomId } = payload;
 
     try {
@@ -55,7 +60,11 @@ export class DecisionEngineService {
    *   < 50%  → Invalid
    */
   calculateResult(decision: any) {
-    const options = decision.options as Array<{ id: string; label: string; totalWeight: number }>;
+    const options = decision.options as Array<{
+      id: string;
+      label: string;
+      totalWeight: number;
+    }>;
     const totalWeight = options.reduce((sum, o) => sum + o.totalWeight, 0);
 
     const sorted = [...options].sort((a, b) => b.totalWeight - a.totalWeight);

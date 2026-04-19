@@ -6,11 +6,12 @@ const useDecisionStore = create((set) => ({
   currentDecision: null,
   isLoading: false,
   error: null,
+  weightResult: null,
 
   fetchDecisions: async (roomId) => {
     set({ isLoading: true, error: null });
     try {
-      const { data } = await api.get(`/decisions?roomId=${roomId}`);
+      const { data } = await api.get(`/rooms/${roomId}/decisions`);
       set({ decisions: data, isLoading: false });
     } catch (err) {
       set({ error: err.response?.data?.message || 'Failed to load decisions.', isLoading: false });
@@ -20,7 +21,8 @@ const useDecisionStore = create((set) => ({
   fetchDecision: async (decisionId) => {
     set({ isLoading: true, error: null });
     try {
-      const { data } = await api.get(`/decisions/${decisionId}`);
+      // The backend uses @Controller('rooms/:roomId/decisions') so we pass '0' as roomId since findOne ignores it
+      const { data } = await api.get(`/rooms/0/decisions/${decisionId}`);
       set({ currentDecision: data, isLoading: false });
       return data;
     } catch (err) {
@@ -28,10 +30,10 @@ const useDecisionStore = create((set) => ({
     }
   },
 
-  createDecision: async (payload) => {
+  createDecision: async ({ roomId, ...payload }) => {
     set({ isLoading: true, error: null });
     try {
-      const { data } = await api.post('/decisions', payload);
+      const { data } = await api.post(`/rooms/${roomId}/decisions`, payload);
       set((state) => ({ decisions: [data, ...state.decisions], isLoading: false }));
       return data;
     } catch (err) {
@@ -42,7 +44,7 @@ const useDecisionStore = create((set) => ({
 
   castVote: async (decisionId, optionId) => {
     try {
-      const { data } = await api.post('/voting/vote', { decisionId, optionId });
+      const { data } = await api.post(`/decisions/${decisionId}/votes`, { optionId });
       return data;
     } catch (err) {
       throw err;
@@ -58,6 +60,9 @@ const useDecisionStore = create((set) => ({
   },
 
   clearCurrentDecision: () => set({ currentDecision: null }),
+
+  setWeightResult: (result) => set({ weightResult: result }),
+  clearWeightResult: () => set({ weightResult: null }),
 }));
 
 export default useDecisionStore;

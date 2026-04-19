@@ -15,14 +15,7 @@ export declare class VotingService {
     castVote(decisionId: string, optionId: string, userId: string): Promise<{
         voteId: string;
         weight: number;
-        breakdown: {
-            role: number;
-            reputation: number;
-            trusted: number;
-            skill: number;
-            participation: number;
-            total: number;
-        };
+        breakdown: string[];
     }>;
     getVotes(decisionId: string): Promise<({
         user: {

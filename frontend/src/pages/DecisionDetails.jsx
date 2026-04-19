@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Users, CheckCircle, AlertCircle, Clock, Zap, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Users, CheckCircle, AlertCircle, Clock, Zap, MessageSquare, Wifi, WifiOff } from 'lucide-react';
 import AppLayout from '../components/AppLayout';
+import WeightBreakdown from '../components/WeightBreakdown';
+import DecisionResult from '../components/DecisionResult';
 import useDecisionStore from '../stores/decisionStore';
 import useAuthStore from '../stores/authStore';
+import useSocketStore from '../stores/socketStore';
 import { connectSocket, disconnectSocket } from '../api/socket';
 
 const confidenceColor = (c) => {
@@ -36,6 +39,11 @@ export default function DecisionDetails() {
   const [isVoting, setIsVoting] = useState(false);
   const [voteError, setVoteError] = useState(null);
   const [voteSuccess, setVoteSuccess] = useState(false);
+  const [showWeightBreakdown, setShowWeightBreakdown] = useState(false);
+
+  // Socket store for WS voting
+  const { isConnected, connect: connectSock, voteViaSocket, lastWeightResult, clearWeightResult } = useSocketStore();
+  const { weightResult, setWeightResult, clearWeightResult: clearStoreWeight } = useDecisionStore();
 
   useEffect(() => {
     fetchDecision(id);
@@ -76,12 +84,31 @@ export default function DecisionDetails() {
     setIsVoting(true);
     setVoteError(null);
     try {
-      await castVote(currentDecision.id, selectedOption);
+      // Try WebSocket voting first, fall back to REST
+      let result;
+      try {
+        result = await voteViaSocket({
+          userId: user.id,
+          decisionId: currentDecision.id,
+          optionId: selectedOption,
+        });
+      } catch (wsErr) {
+        // Fallback to REST
+        result = await castVote(currentDecision.id, selectedOption);
+      }
+
       setHasVoted(true);
       setVoteSuccess(true);
+
+      // Show weight breakdown if we got one
+      if (result?.weight !== undefined) {
+        setWeightResult(result);
+        setShowWeightBreakdown(true);
+      }
+
       await fetchDecision(id);
     } catch (err) {
-      setVoteError(err.response?.data?.message || 'Vote failed. Please try again.');
+      setVoteError(err.response?.data?.message || err.message || 'Vote failed. Please try again.');
     } finally {
       setIsVoting(false);
     }
@@ -117,6 +144,18 @@ export default function DecisionDetails() {
   return (
     <AppLayout>
       <div className="p-8 max-w-5xl space-y-8">
+        {/* Weight Breakdown Modal */}
+        {showWeightBreakdown && weightResult && (
+          <WeightBreakdown
+            weightResult={weightResult}
+            onClose={() => {
+              setShowWeightBreakdown(false);
+              clearStoreWeight();
+              clearWeightResult();
+            }}
+          />
+        )}
+
         {/* Back */}
         <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-[#76777d] hover:text-[#0F172A] transition">
           <ArrowLeft className="w-4 h-4" /> Back
@@ -163,6 +202,9 @@ export default function DecisionDetails() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Voting panel */}
           <div className="lg:col-span-2 space-y-5">
+            {/* Decision Result (shown when decision is closed) */}
+            {d.status !== 'OPEN' && <DecisionResult decision={d} />}
+
             {/* Consensus Dynamics */}
             <div className="bg-white rounded-2xl p-6 space-y-4">
               <h2 className="font-display text-base font-bold text-[#0F172A]">Consensus Dynamics</h2>
@@ -267,6 +309,17 @@ export default function DecisionDetails() {
               <p className="text-white/40 text-[10px] uppercase tracking-widest mb-1">Your Voting Power</p>
               <p className="font-display text-2xl font-bold text-white">—</p>
               <p className="text-white/40 text-xs mt-1">Based on reputation & role</p>
+              {isConnected ? (
+                <div className="flex items-center gap-1.5 mt-2">
+                  <Wifi className="w-3 h-3 text-emerald-400" />
+                  <span className="text-[10px] text-emerald-400">Live</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 mt-2">
+                  <WifiOff className="w-3 h-3 text-red-400" />
+                  <span className="text-[10px] text-red-400">Offline</span>
+                </div>
+              )}
             </div>
 
             {/* Confidence Meter */}

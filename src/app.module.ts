@@ -11,6 +11,9 @@ import { VotingModule } from './voting/voting.module';
 import { WeightModule } from './weight/weight.module';
 import { DecisionEngineModule } from './decision-engine/decision-engine.module';
 import { ReputationModule } from './reputation/reputation.module';
+import { InviteModule } from './invite/invite.module';
+import { EventsModule } from './gateway/events.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
@@ -18,7 +21,11 @@ import { ReputationModule } from './reputation/reputation.module';
     ConfigModule,
     DatabaseModule,
     RedisModule,
-    EventEmitterModule.forRoot({ wildcard: false, delimiter: '.', global: true }),
+    EventEmitterModule.forRoot({
+      wildcard: false,
+      delimiter: '.',
+      global: true,
+    }),
 
     // Feature modules
     AuthModule,
@@ -29,6 +36,9 @@ import { ReputationModule } from './reputation/reputation.module';
     VotingModule,
     DecisionEngineModule,
     ReputationModule,
+    InviteModule,
+    EventsModule,
+    EmailModule,
   ],
 })
 export class AppModule {}

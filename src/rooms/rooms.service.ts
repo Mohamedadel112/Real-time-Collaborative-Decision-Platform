@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { CreateRoomDto } from './dto/create-room.dto';
@@ -42,7 +47,11 @@ export class RoomsService {
       where: { id },
       include: {
         owner: { select: { id: true, username: true } },
-        members: { include: { user: { select: { id: true, username: true, role: true } } } },
+        members: {
+          include: {
+            user: { select: { id: true, username: true, role: true } },
+          },
+        },
         _count: { select: { decisions: true } },
       },
     });
@@ -70,7 +79,8 @@ export class RoomsService {
   async leave(roomId: string, userId: string) {
     const room = await this.prisma.room.findUnique({ where: { id: roomId } });
     if (!room) throw new NotFoundException('Room not found');
-    if (room.ownerId === userId) throw new ForbiddenException('Owner cannot leave the room');
+    if (room.ownerId === userId)
+      throw new ForbiddenException('Owner cannot leave the room');
 
     await this.prisma.roomMember.delete({
       where: { roomId_userId: { roomId, userId } },
@@ -80,15 +90,15 @@ export class RoomsService {
   // ─── Presence Tracking (Redis) ────────────────────────────────────────────
 
   async addPresence(roomId: string, userId: string): Promise<void> {
-    await this.redis.sadd(`${ROOM_PRESENCE_PREFIX}${roomId}`, userId);
+    await this.redis.client.sadd(`${ROOM_PRESENCE_PREFIX}${roomId}`, userId);
   }
 
   async removePresence(roomId: string, userId: string): Promise<void> {
-    await this.redis.srem(`${ROOM_PRESENCE_PREFIX}${roomId}`, userId);
+    await this.redis.client.srem(`${ROOM_PRESENCE_PREFIX}${roomId}`, userId);
   }
 
   async getPresence(roomId: string): Promise<string[]> {
-    return this.redis.smembers(`${ROOM_PRESENCE_PREFIX}${roomId}`);
+    return this.redis.client.smembers(`${ROOM_PRESENCE_PREFIX}${roomId}`);
   }
 
   async isUserInRoom(roomId: string, userId: string): Promise<boolean> {

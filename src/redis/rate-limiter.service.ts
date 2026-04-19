@@ -15,9 +15,9 @@ export class RateLimiterService {
     windowSeconds: number,
   ): Promise<boolean> {
     const key = `rate:${identifier}`;
-    const count = await this.redis.incr(key);
+    const count = await this.redis.client.incr(key);
     if (count === 1) {
-      await this.redis.expire(key, windowSeconds);
+      await this.redis.client.expire(key, windowSeconds);
     }
     return count <= maxRequests;
   }
@@ -27,9 +27,16 @@ export class RateLimiterService {
     maxRequests: number,
     windowSeconds: number,
   ): Promise<void> {
-    const allowed = await this.isAllowed(identifier, maxRequests, windowSeconds);
+    const allowed = await this.isAllowed(
+      identifier,
+      maxRequests,
+      windowSeconds,
+    );
     if (!allowed) {
-      throw new HttpException('Too many requests', HttpStatus.TOO_MANY_REQUESTS);
+      throw new HttpException(
+        'Too many requests',
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
     }
   }
 }

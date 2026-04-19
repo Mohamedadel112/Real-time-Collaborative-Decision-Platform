@@ -57,8 +57,8 @@ export declare class RoomsService {
             };
         } & {
             id: string;
-            joinedAt: Date;
             userId: string;
+            joinedAt: Date;
             roomId: string;
         })[];
     } & {
@@ -74,8 +74,8 @@ export declare class RoomsService {
     }>;
     join(roomId: string, userId: string): Promise<{
         id: string;
-        joinedAt: Date;
         userId: string;
+        joinedAt: Date;
         roomId: string;
     }>;
     leave(roomId: string, userId: string): Promise<void>;

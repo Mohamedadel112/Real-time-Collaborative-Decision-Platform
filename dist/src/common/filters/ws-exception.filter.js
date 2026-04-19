@@ -13,7 +13,9 @@ let WsExceptionFilter = class WsExceptionFilter extends websockets_1.BaseWsExcep
     catch(exception, host) {
         const client = host.switchToWs().getClient();
         const error = exception.getError();
-        client.emit('error', { message: typeof error === 'string' ? error : JSON.stringify(error) });
+        client.emit('error', {
+            message: typeof error === 'string' ? error : JSON.stringify(error),
+        });
     }
 };
 exports.WsExceptionFilter = WsExceptionFilter;

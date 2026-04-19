@@ -26,7 +26,7 @@ let UsersRepository = class UsersRepository {
     async updateReputation(userId, delta) {
         return this.prisma.user.update({
             where: { id: userId },
-            data: { reputation: { increment: delta } },
+            data: { reputationScore: { increment: delta } },
         });
     }
     async incrementVotesCount(userId, correct) {
@@ -40,9 +40,6 @@ let UsersRepository = class UsersRepository {
     }
     async updateRole(userId, role) {
         return this.prisma.user.update({ where: { id: userId }, data: { role } });
-    }
-    async updateDomainExpertise(userId, domains) {
-        return this.prisma.user.update({ where: { id: userId }, data: { domainExpertise: domains } });
     }
 };
 exports.UsersRepository = UsersRepository;

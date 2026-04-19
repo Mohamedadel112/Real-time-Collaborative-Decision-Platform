@@ -1,19 +1,16 @@
 import { Module } from '@nestjs/common';
-import { WeightService } from './weight.service';
-import { RoleStrategy } from './strategies/role.strategy';
-import { ReputationStrategy } from './strategies/reputation.strategy';
-import { TrustedStrategy } from './strategies/trusted.strategy';
-import { SkillStrategy } from './strategies/skill.strategy';
-import { ParticipationStrategy } from './strategies/participation.strategy';
+import { WeightService, DefaultWeightStrategy } from './weight.service';
 
 @Module({
   providers: [
-    WeightService,
-    RoleStrategy,
-    ReputationStrategy,
-    TrustedStrategy,
-    SkillStrategy,
-    ParticipationStrategy,
+    DefaultWeightStrategy,
+    {
+      provide: WeightService,
+      useFactory: (defaultStrategy: DefaultWeightStrategy) => {
+        return new WeightService(defaultStrategy);
+      },
+      inject: [DefaultWeightStrategy],
+    },
   ],
   exports: [WeightService],
 })
